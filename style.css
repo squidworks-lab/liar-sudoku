@@ -106,6 +106,7 @@ h1 { margin-bottom: 7px; font-family: Georgia, "Yu Mincho", serif; font-size: cl
 .board {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
   aspect-ratio: 1;
   overflow: hidden;
   border: 2px solid var(--line-strong);
