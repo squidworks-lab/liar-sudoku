@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f8f8f5">
+    <meta name="description" content="4×4のミニ数独で、たったひとつのウソの数字を見破ろう。">
+    <title>ウソツキ数独 | SquidWorks Games</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="script.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="wordmark" href="./" aria-label="SquidWorks Games ホーム">
+        <span class="brand-mark" aria-hidden="true">S</span>
+        <span class="brand-copy"><strong>SquidWorks</strong><span>GAMES</span></span>
+      </a>
+      <span class="edition">NO. 001 <span aria-hidden="true">/</span> LOGIC PUZZLE</span>
+    </header>
+
+    <main class="game-shell">
+      <section class="intro" aria-labelledby="game-title">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> SQUIDWORKS GAMES #001</p>
+        <h1 id="game-title">ウソツキ数独</h1>
+        <p class="lead">ひとつだけ混ざった、ウソの数字を見つけよう。</p>
+      </section>
+
+      <section class="play-area" aria-label="ゲーム">
+        <div class="puzzle-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="section-label">PUZZLE <span id="puzzle-number">01</span></p>
+              <h2>この中に、ひとつだけウソがある。</h2>
+            </div>
+            <button class="next-button" id="next-button" type="button">
+              <span aria-hidden="true">↻</span> 次の問題
+            </button>
+          </div>
+
+          <div class="board-wrap">
+            <div class="board" id="board" role="group" aria-label="4行4列の数独盤面"></div>
+          </div>
+
+          <div class="answer-row">
+            <p class="answer-hint" id="answer-hint">ウソだと思う数字を選んでください。</p>
+            <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+
+        <aside class="how-to" aria-labelledby="rules-title">
+          <p class="section-label">HOW TO PLAY</p>
+          <h2 id="rules-title">ルール</h2>
+          <ol class="rules-list">
+            <li><span>01</span><p>各行・各列・各2×2ブロックに、<strong>1〜4</strong>を1回ずつ入れます。</p></li>
+            <li><span>02</span><p>最初から見えている数字のうち、<strong>ひとつだけ</strong>が間違いです。</p></li>
+            <li><span>03</span><p>数独のルールに合わない数字をタップして回答します。</p></li>
+          </ol>
+          <div class="rule-note">
+            <span class="note-mark" aria-hidden="true">!</span>
+            <p>ウソを取り除くと、盤面はひとつの答えに決まります。</p>
+          </div>
+        </aside>
+      </section>
+
+      <footer class="site-footer">
+        <span>LOGIC, WITH A LITTLE LIE.</span>
+        <span>© SQUIDWORKS GAMES</span>
+      </footer>
+    </main>
+  </body>
+</html>

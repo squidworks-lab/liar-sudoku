@@ -1,0 +1,186 @@
+:root {
+  color-scheme: light;
+  --paper: #f8f8f5;
+  --surface: #ffffff;
+  --ink: #242824;
+  --muted: #767b73;
+  --line: #d8dcd5;
+  --line-strong: #555d54;
+  --accent: #d94832;
+  --accent-soft: #fff0ec;
+  --success: #24784d;
+  --success-soft: #eaf5ee;
+  font-family: "Avenir Next", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background-color: var(--paper);
+  background-image: radial-gradient(#d8dcd5 0.65px, transparent 0.65px);
+  background-position: 12px 12px;
+  background-size: 24px 24px;
+  color: var(--ink);
+}
+
+button, a { -webkit-tap-highlight-color: transparent; }
+
+.site-header {
+  min-height: 76px;
+  padding: 0 clamp(20px, 5vw, 72px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e6e8e2;
+  background: rgba(248, 248, 245, 0.94);
+}
+
+.wordmark { display: inline-flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font-family: Georgia, serif;
+  font-size: 21px;
+  font-style: italic;
+}
+.brand-copy { display: grid; gap: 1px; }
+.brand-copy strong { font-family: Georgia, "Yu Mincho", serif; font-size: 15px; font-weight: 600; }
+.brand-copy span, .edition, .eyebrow, .section-label, .site-footer {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.brand-copy span { color: var(--muted); font-size: 8px; }
+.edition { color: var(--muted); }
+.edition span { padding: 0 7px; color: var(--accent); }
+
+.game-shell { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
+.intro { padding: 52px 0 34px; }
+.eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 12px; color: var(--accent); }
+.eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+h1, h2, p { margin-top: 0; }
+h1 { margin-bottom: 7px; font-family: Georgia, "Yu Mincho", serif; font-size: clamp(36px, 5vw, 54px); font-weight: 500; line-height: 1.15; }
+.lead { margin: 0; color: var(--muted); font-size: 15px; }
+
+.play-area { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr); gap: 20px; align-items: stretch; }
+.puzzle-panel, .how-to { background: var(--surface); border: 1px solid #e3e5df; }
+.puzzle-panel { padding: clamp(20px, 3.2vw, 38px); }
+.panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.section-label { margin: 0 0 9px; color: var(--accent); }
+.section-label span { padding-left: 6px; color: var(--muted); }
+.panel-heading h2 { margin: 0; font-family: Georgia, "Yu Mincho", serif; font-size: clamp(17px, 2vw, 21px); font-weight: 500; }
+.next-button {
+  min-height: 46px;
+  padding: 0 15px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  background: var(--ink);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
+}
+.next-button span { font-size: 19px; line-height: 1; }
+.next-button:hover { background: #414841; }
+.next-button:active { transform: translateY(1px); }
+.next-button:focus-visible, .cell:focus-visible { outline: 3px solid #e99b8d; outline-offset: 3px; }
+
+.board-wrap { width: min(100%, 430px); margin: 27px auto 22px; }
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 2px solid var(--line-strong);
+  background: var(--surface);
+}
+.cell {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: Georgia, "Yu Mincho", serif;
+  font-size: clamp(28px, 6vw, 48px);
+  font-weight: 500;
+  cursor: default;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+.cell:nth-child(4n) { border-right: 0; }
+.cell:nth-child(n + 13) { border-bottom: 0; }
+.cell:nth-child(4n + 2) { border-right: 2px solid var(--line-strong); }
+.cell:nth-child(n + 5):nth-child(-n + 8) { border-bottom: 2px solid var(--line-strong); }
+.cell.is-clue { cursor: pointer; }
+.cell.is-clue:hover { background: #f3f5f0; }
+.cell.is-selected { z-index: 1; background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+.cell.is-revealed { background: var(--success-soft); color: var(--success); }
+.cell.is-incorrect { animation: nudge 240ms ease-in-out; }
+.cell:disabled { opacity: 1; }
+
+.answer-row { min-height: 28px; display: flex; align-items: center; justify-content: center; text-align: center; }
+.answer-hint, .feedback { margin: 0; font-size: 13px; }
+.answer-hint { color: var(--muted); }
+.feedback { font-weight: 700; }
+.feedback.is-correct { color: var(--success); }
+.feedback.is-incorrect { color: var(--accent); }
+
+.how-to { padding: clamp(24px, 3vw, 34px); }
+.how-to > h2 { margin: 0 0 21px; font-family: Georgia, "Yu Mincho", serif; font-size: 24px; font-weight: 500; }
+.rules-list { display: grid; gap: 17px; margin: 0; padding: 0; list-style: none; }
+.rules-list li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; }
+.rules-list li > span { padding-top: 2px; color: var(--accent); font-family: Georgia, serif; font-size: 13px; }
+.rules-list p { margin: 0; color: #555b54; font-size: 14px; line-height: 1.8; }
+.rules-list strong { color: var(--ink); }
+.rule-note { display: flex; align-items: flex-start; gap: 11px; margin-top: 27px; padding-top: 20px; border-top: 1px solid #e8eae5; }
+.note-mark { width: 22px; height: 22px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-family: Georgia, serif; font-weight: 700; }
+.rule-note p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.site-footer { display: flex; justify-content: space-between; padding: 22px 0 30px; color: #858a82; font-size: 9px; }
+
+@keyframes nudge { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+
+@media (max-width: 760px) {
+  .game-shell { width: min(100% - 32px, 560px); }
+  .intro { padding: 38px 0 25px; }
+  .play-area { grid-template-columns: 1fr; gap: 14px; }
+  .how-to { padding: 24px; }
+  .rules-list { grid-template-columns: 1fr; }
+  .site-footer { padding-bottom: 22px; }
+}
+
+@media (max-width: 430px) {
+  .site-header { min-height: 64px; padding: 0 16px; }
+  .edition { font-size: 8px; }
+  .game-shell { width: calc(100% - 24px); }
+  .panel-heading { align-items: flex-start; }
+  .panel-heading h2 { max-width: 195px; line-height: 1.5; }
+  .next-button { min-height: 44px; padding: 0 10px; font-size: 12px; }
+  .puzzle-panel { padding: 17px 14px 19px; }
+  .board-wrap { margin-top: 22px; }
+  .answer-row { min-height: 34px; }
+  .answer-hint, .feedback { font-size: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
