@@ -13,8 +13,8 @@
       gtag('js', new Date());
       gtag('config', 'G-3E2VY70LKJ');
     </script>
-    <link rel="stylesheet" href="style.css?v=2">
-    <script type="module" src="script.js?v=3"></script>
+    <link rel="stylesheet" href="style.css?v=3">
+    <script type="module" src="script.js?v=5"></script>
   </head>
   <body>
     <header class="site-header">
@@ -34,10 +34,14 @@
 
       <section class="play-area" aria-label="ゲーム">
         <div class="puzzle-panel">
+          <div class="mode-switch" role="group" aria-label="数独のサイズ">
+            <button class="mode-button is-active" id="mode-4-button" type="button" aria-pressed="true">4×4</button>
+            <button class="mode-button" id="mode-9-button" type="button" aria-pressed="false">9×9</button>
+          </div>
           <div class="panel-heading">
             <div>
               <p class="section-label">DAILY PUZZLE <span id="puzzle-date"></span></p>
-              <h2>この中に、ひとつだけウソがある。</h2>
+              <h2 id="puzzle-heading">この中に、ひとつだけウソがある。</h2>
             </div>
             <a class="next-button" id="share-button" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer">
               <span aria-hidden="true">↗</span> Xでシェア
@@ -45,7 +49,7 @@
           </div>
 
           <div class="board-wrap">
-            <div class="board" id="board" role="group" aria-label="4行4列の数独盤面"></div>
+            <div class="board board--4" id="board" role="group" aria-label="4行4列の数独盤面"></div>
           </div>
 
           <div class="answer-row">
@@ -58,7 +62,7 @@
           <p class="section-label">HOW TO PLAY</p>
           <h2 id="rules-title">ルール</h2>
           <ol class="rules-list">
-            <li><span>01</span><p>各行・各列・各2×2ブロックに、<strong>1〜4</strong>を1回ずつ入れます。</p></li>
+            <li><span>01</span><p>各行・各列・各<span id="rule-block-size">2×2</span>ブロックに、<strong id="rule-digits">1〜4</strong>を1回ずつ入れます。</p></li>
             <li><span>02</span><p>最初から見えている数字のうち、<strong>ひとつだけ</strong>が間違いです。</p></li>
             <li><span>03</span><p>数独のルールに合わない数字をタップして回答します。</p></li>
           </ol>

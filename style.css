@@ -76,6 +76,31 @@ h1 { margin-bottom: 7px; font-family: Georgia, "Yu Mincho", serif; font-size: cl
 .puzzle-panel, .how-to { background: var(--surface); border: 1px solid #e3e5df; }
 .puzzle-panel { padding: clamp(20px, 3.2vw, 38px); }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+.mode-switch {
+  width: fit-content;
+  display: flex;
+  gap: 4px;
+  margin-bottom: 22px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+}
+.mode-button {
+  min-width: 76px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mode-button.is-active { background: var(--ink); color: #fff; }
+.mode-button:focus-visible { outline: 3px solid #e99b8d; outline-offset: 2px; }
 .section-label { margin: 0 0 9px; color: var(--accent); }
 .section-label span { padding-left: 6px; color: var(--muted); }
 .panel-heading h2 { margin: 0; font-family: Georgia, "Yu Mincho", serif; font-size: clamp(17px, 2vw, 21px); font-weight: 500; }
@@ -105,8 +130,8 @@ h1 { margin-bottom: 7px; font-family: Georgia, "Yu Mincho", serif; font-size: cl
 .board-wrap { width: min(100%, 430px); margin: 27px auto 22px; }
 .board {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--board-size, 4), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--board-size, 4), minmax(0, 1fr));
   aspect-ratio: 1;
   overflow: hidden;
   border: 2px solid var(--line-strong);
@@ -129,10 +154,11 @@ h1 { margin-bottom: 7px; font-family: Georgia, "Yu Mincho", serif; font-size: cl
   cursor: default;
   transition: background-color 140ms ease, color 140ms ease;
 }
-.cell:nth-child(4n) { border-right: 0; }
-.cell:nth-child(n + 13) { border-bottom: 0; }
-.cell:nth-child(4n + 2) { border-right: 2px solid var(--line-strong); }
-.cell:nth-child(n + 5):nth-child(-n + 8) { border-bottom: 2px solid var(--line-strong); }
+.cell.is-block-right { border-right: 2px solid var(--line-strong); }
+.cell.is-block-bottom { border-bottom: 2px solid var(--line-strong); }
+.cell.is-edge-right { border-right: 0; }
+.cell.is-edge-bottom { border-bottom: 0; }
+.board--9 .cell { font-size: clamp(12px, 3.8vw, 25px); }
 .cell.is-clue { cursor: pointer; }
 .cell.is-clue:hover { background: #f3f5f0; }
 .cell.is-selected { z-index: 1; background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
