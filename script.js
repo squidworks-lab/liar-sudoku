@@ -1,4 +1,4 @@
-import { generateDailyPuzzle } from "./game-logic.mjs";
+import { generateDailyPuzzle } from "./game-logic.mjs?v=2";
 
 const boardElement = document.querySelector("#board");
 const feedbackElement = document.querySelector("#feedback");
