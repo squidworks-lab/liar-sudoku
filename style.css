@@ -94,6 +94,7 @@ h1 { margin-bottom: 7px; font-family: Georgia, "Yu Mincho", serif; font-size: cl
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  text-decoration: none;
   transition: background-color 140ms ease, color 140ms ease, transform 140ms ease;
 }
 .next-button span { font-size: 19px; line-height: 1; }

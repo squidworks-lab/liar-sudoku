@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { countSolutions, generatePuzzle, validatePuzzle } from "../game-logic.mjs";
+import { countSolutions, generateDailyPuzzle, generatePuzzle, validatePuzzle } from "../game-logic.mjs";
 
 test("solution counter distinguishes impossible, unique, and multiple grids", () => {
   assert.equal(countSolutions(Array(16).fill(0), 2), 2);
@@ -25,4 +25,16 @@ test("generated puzzles have exactly one logically identifiable lie", () => {
 
 test("generation retries are bounded", () => {
   assert.throws(() => generatePuzzle({ maxAttempts: 0 }), /0回以内/);
+});
+
+test("daily puzzles are stable for a date and have a uniquely identifiable lie", () => {
+  const first = generateDailyPuzzle("2026-11-04");
+  const second = generateDailyPuzzle("2026-11-04");
+
+  assert.deepEqual(first, second);
+  assert.equal(validatePuzzle(first).valid, true);
+});
+
+test("daily puzzle date keys must use the ISO date format", () => {
+  assert.throws(() => generateDailyPuzzle("2026/11/04"), /YYYY-MM-DD/);
 });

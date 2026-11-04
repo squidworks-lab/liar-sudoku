@@ -10,6 +10,22 @@ function shuffled(values, random = Math.random) {
   return result;
 }
 
+function createSeededRandom(seed) {
+  let state = 2166136261;
+  for (const character of seed) {
+    state ^= character.charCodeAt(0);
+    state = Math.imul(state, 16777619);
+  }
+
+  return () => {
+    state += 0x6d2b79f5;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function candidatesFor(grid, index) {
   const row = Math.floor(index / SIZE);
   const column = index % SIZE;
@@ -190,4 +206,11 @@ export function generatePuzzle({ maxAttempts = 5000, random = Math.random } = {}
   }
 
   throw new Error(`検証に通る問題を${maxAttempts}回以内に生成できませんでした。`);
+}
+
+export function generateDailyPuzzle(dateKey) {
+  if (typeof dateKey !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
+    throw new TypeError("日替わり問題の日付はYYYY-MM-DD形式で指定してください。");
+  }
+  return generatePuzzle({ random: createSeededRandom(dateKey) });
 }
