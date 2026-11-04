@@ -19,6 +19,55 @@ let puzzleDate;
 let selectedIndex = null;
 let answered = false;
 let guessesMade = 0;
+let persistenceNotice = "";
+
+function getDailyResultKey(dateKey) {
+  return `liar-sudoku:daily-result:${dateKey}`;
+}
+
+function loadDailyResult(dateKey) {
+  let serialized;
+  try {
+    serialized = window.localStorage.getItem(getDailyResultKey(dateKey));
+  } catch (error) {
+    if (error instanceof DOMException) {
+      persistenceNotice = "このブラウザーではクリア状態を読み込めません。";
+      return null;
+    }
+    throw error;
+  }
+  if (!serialized) return null;
+
+  let result;
+  try {
+    result = JSON.parse(serialized);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      persistenceNotice = "保存されたクリア状態を読み取れませんでした。";
+      return null;
+    }
+    throw error;
+  }
+  if (result?.completed === true && Number.isInteger(result.guessesMade) && result.guessesMade > 0) {
+    return result;
+  }
+
+  persistenceNotice = "保存されたクリア状態の形式が正しくありません。";
+  return null;
+}
+
+function saveDailyResult(dateKey, result) {
+  try {
+    window.localStorage.setItem(getDailyResultKey(dateKey), JSON.stringify(result));
+    return true;
+  } catch (error) {
+    if (error instanceof DOMException) {
+      persistenceNotice = "クリア状態をこのブラウザーに保存できませんでした。";
+      return false;
+    }
+    throw error;
+  }
+}
 
 function getTodayInJapan() {
   const dateParts = Object.fromEntries(
@@ -30,13 +79,18 @@ function getTodayInJapan() {
 function startPuzzle(dateKey = getTodayInJapan()) {
   puzzleDate = dateKey;
   puzzle = generateDailyPuzzle(puzzleDate);
-  selectedIndex = null;
-  answered = false;
-  guessesMade = 0;
+  persistenceNotice = "";
+  const savedResult = loadDailyResult(puzzleDate);
+  answered = savedResult !== null;
+  selectedIndex = answered ? puzzle.liarIndex : null;
+  guessesMade = savedResult?.guessesMade ?? 0;
   puzzleDateElement.textContent = puzzleDate.replaceAll("-", ".");
-  feedbackElement.textContent = "";
+  feedbackElement.textContent = answered
+    ? `本日の問題はクリア済みです。${guessesMade}回目で正解しました。`
+    : persistenceNotice;
   feedbackElement.className = "feedback";
-  answerHintElement.hidden = false;
+  if (answered) feedbackElement.classList.add("is-correct");
+  answerHintElement.hidden = answered;
   renderBoard();
   updateShareLink();
 }
@@ -103,7 +157,10 @@ function chooseCell(index) {
   if (index === puzzle.liarIndex) {
     answered = true;
     answerHintElement.hidden = true;
-    feedbackElement.textContent = `正解！このマスの本当の数字は ${puzzle.solution[index]} です。`;
+    const saved = saveDailyResult(puzzleDate, { completed: true, guessesMade });
+    feedbackElement.textContent = saved || !persistenceNotice
+      ? `正解！このマスの本当の数字は ${puzzle.solution[index]} です。`
+      : `正解！このマスの本当の数字は ${puzzle.solution[index]} です。${persistenceNotice}`;
     feedbackElement.classList.add("is-correct");
     renderBoard();
     updateShareLink();
