@@ -1,5 +1,7 @@
-import { generateDailyPuzzle, generateDailyPuzzle9 } from "./game-logic.mjs?v=3";
-import { createGameEventTracker } from "./analytics.mjs?v=1";
+import { generateDailyPuzzle, generateDailyPuzzle9 } from "./game-logic.mjs?v=4";
+import { createGameEventTracker, initializeGoogleAnalytics } from "./analytics.mjs?v=2";
+
+initializeGoogleAnalytics(window.location.hostname, window, document);
 
 const boardElement = document.querySelector("#board");
 const feedbackElement = document.querySelector("#feedback");

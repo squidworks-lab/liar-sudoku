@@ -10,7 +10,30 @@ import {
   validatePuzzle,
   validatePuzzle9,
 } from "../game-logic.mjs";
-import { createGameEventTracker } from "../analytics.mjs";
+import {
+  createGameEventTracker,
+  initializeGoogleAnalytics,
+  isLocalHostname,
+} from "../analytics.mjs";
+
+function assertNoDuplicateClues9(grid) {
+  for (let index = 0; index < 9; index += 1) {
+    const row = Array.from({ length: 9 }, (_, column) => grid[index * 9 + column]);
+    const column = Array.from({ length: 9 }, (_, rowIndex) => grid[rowIndex * 9 + index]);
+    const boxRow = Math.floor(index / 3) * 3;
+    const boxColumn = (index % 3) * 3;
+    const box = [];
+    for (let rowOffset = 0; rowOffset < 3; rowOffset += 1) {
+      for (let columnOffset = 0; columnOffset < 3; columnOffset += 1) {
+        box.push(grid[(boxRow + rowOffset) * 9 + boxColumn + columnOffset]);
+      }
+    }
+    for (const unit of [row, column, box]) {
+      const clues = unit.filter(Boolean);
+      assert.equal(new Set(clues).size, clues.length);
+    }
+  }
+}
 
 test("solution counter distinguishes impossible, unique, and multiple grids", () => {
   assert.equal(countSolutions(Array(16).fill(0), 2), 2);
@@ -63,10 +86,28 @@ test("daily 9x9 puzzles are valid, uniquely identify one lie, and are date-stabl
 
   assert.deepEqual(first, sameDay);
   assert.notDeepEqual(first, nextDay);
+  for (let day = 1; day <= 10; day += 1) {
+    const dateKey = `2026-11-${String(day).padStart(2, "0")}`;
+    const dailyPuzzle = generateDailyPuzzle9(dateKey);
+    assert.equal(validatePuzzle9(dailyPuzzle).valid, true, dateKey);
+  }
   assert.equal(first.solution.length, 81);
   assert.equal(first.clues.length, 81);
   assert.equal(validatePuzzle9(first).valid, true);
   assert.deepEqual(validatePuzzle9(first).candidates, [first.liarIndex]);
+  assert.ok(validatePuzzle9(first).contradictionDepth >= 1);
+  assert.ok(validatePuzzle9(first).contradictionDepth <= 2);
+  assertNoDuplicateClues9(first.clues);
+  assert.equal(countSolutions9(first.clues, 1), 0);
+  const correctedClues = [...first.clues];
+  correctedClues[first.liarIndex] = 0;
+  assert.equal(countSolutions9(correctedClues, 2), 1);
+  for (let index = 0; index < first.clues.length; index += 1) {
+    if (index === first.liarIndex || first.clues[index] === 0) continue;
+    const reducedClues = [...first.clues];
+    reducedClues[index] = 0;
+    assert.equal(countSolutions9(reducedClues, 1), 0);
+  }
   assert.deepEqual(
     first.clues.flatMap((clue, index) => clue !== 0 && clue !== first.solution[index] ? [index] : []),
     [first.liarIndex],
@@ -127,6 +168,45 @@ test("GA4 tracking is optional and cannot interrupt game behavior", () => {
     () => track("game_complete", { game_mode: "4x4", game_date: "2026-11-04" }),
     /attempts/,
   );
+});
+
+test("GA4 is not initialized on local hostnames and loads on public hosts", () => {
+  for (const hostname of ["localhost", "127.0.0.1", "::1", "[::1]"]) {
+    const localWindow = {};
+    const appendedScripts = [];
+    const localDocument = {
+      createElement: () => ({}),
+      head: { append: (script) => appendedScripts.push(script) },
+    };
+    assert.equal(isLocalHostname(hostname), true);
+    assert.equal(initializeGoogleAnalytics(hostname, localWindow, localDocument), false);
+    assert.equal(localWindow.gtag, undefined);
+    assert.equal(appendedScripts.length, 0);
+    const track = createGameEventTracker(() => localWindow.gtag);
+    assert.equal(track("game_start", { game_mode: "4x4", game_date: "2026-11-04" }), false);
+    assert.equal(track("game_complete", {
+      game_mode: "9x9",
+      game_date: "2026-11-04",
+      attempts: 2,
+    }), false);
+    assert.equal(track("game_share", { game_mode: "9x9", game_date: "2026-11-04" }), false);
+  }
+
+  const publicWindow = {};
+  const appendedScripts = [];
+  const publicDocument = {
+    createElement: () => ({}),
+    head: { append: (script) => appendedScripts.push(script) },
+  };
+  assert.equal(isLocalHostname("squidworks-lab.github.io"), false);
+  assert.equal(initializeGoogleAnalytics("squidworks-lab.github.io", publicWindow, publicDocument), true);
+  assert.equal(appendedScripts.length, 1);
+  assert.equal(appendedScripts[0].async, true);
+  assert.equal(
+    appendedScripts[0].src,
+    "https://www.googletagmanager.com/gtag/js?id=G-3E2VY70LKJ",
+  );
+  assert.equal(publicWindow.dataLayer.length, 2);
 });
 
 test("GA4 start and completion events are sent once per mode and date", () => {

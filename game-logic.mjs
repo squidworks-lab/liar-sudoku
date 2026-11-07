@@ -218,6 +218,16 @@ export function generateDailyPuzzle(dateKey) {
 const SIZE_9 = 9;
 const BOX_SIZE_9 = 3;
 const FULL_MASK_9 = (1 << SIZE_9) - 1;
+const UNITS_9 = [];
+for (let index = 0; index < SIZE_9; index += 1) {
+  UNITS_9.push(Array.from({ length: SIZE_9 }, (_, offset) => index * SIZE_9 + offset));
+  UNITS_9.push(Array.from({ length: SIZE_9 }, (_, offset) => offset * SIZE_9 + index));
+  const boxRow = Math.floor(index / BOX_SIZE_9) * BOX_SIZE_9;
+  const boxColumn = (index % BOX_SIZE_9) * BOX_SIZE_9;
+  UNITS_9.push(Array.from({ length: SIZE_9 }, (_, offset) =>
+    (boxRow + Math.floor(offset / BOX_SIZE_9)) * SIZE_9 + boxColumn + offset % BOX_SIZE_9,
+  ));
+}
 
 function boxIndex9(row, column) {
   return Math.floor(row / BOX_SIZE_9) * BOX_SIZE_9 + Math.floor(column / BOX_SIZE_9);
@@ -327,6 +337,69 @@ function solve9(grid, limit = 2) {
   return solutions;
 }
 
+function findSinglesContradictionDepth9(grid, maxSteps = 2) {
+  const workingGrid = [...grid];
+  let steps = 0;
+  while (steps <= maxSteps) {
+    const rowMasks = Array(SIZE_9).fill(0);
+    const columnMasks = Array(SIZE_9).fill(0);
+    const boxMasks = Array(SIZE_9).fill(0);
+    for (let index = 0; index < workingGrid.length; index += 1) {
+      const value = workingGrid[index];
+      if (value === 0) continue;
+      const row = Math.floor(index / SIZE_9);
+      const column = index % SIZE_9;
+      const box = boxIndex9(row, column);
+      const bit = 1 << (value - 1);
+      if ((rowMasks[row] | columnMasks[column] | boxMasks[box]) & bit) return steps;
+      rowMasks[row] |= bit;
+      columnMasks[column] |= bit;
+      boxMasks[box] |= bit;
+    }
+
+    const candidates = Array(SIZE_9 * SIZE_9).fill(0);
+    for (let index = 0; index < workingGrid.length; index += 1) {
+      if (workingGrid[index] !== 0) continue;
+      candidates[index] = getCandidates9(index, rowMasks, columnMasks, boxMasks);
+      if (candidates[index] === 0) return steps;
+    }
+
+    const forced = [];
+    for (let index = 0; index < candidates.length; index += 1) {
+      const mask = candidates[index];
+      if (mask && (mask & (mask - 1)) === 0) {
+        forced.push([index, 32 - Math.clz32(mask)]);
+      }
+    }
+    for (const unit of UNITS_9) {
+      let used = 0;
+      for (const index of unit) {
+        if (workingGrid[index]) used |= 1 << (workingGrid[index] - 1);
+      }
+      for (let value = 1; value <= SIZE_9; value += 1) {
+        const bit = 1 << (value - 1);
+        if (used & bit) continue;
+        const places = unit.filter((index) => !workingGrid[index] && (candidates[index] & bit));
+        if (places.length === 0) return steps;
+        if (places.length === 1) forced.push([places[0], value]);
+      }
+    }
+
+    const forcedValues = new Map();
+    for (const [index, value] of forced) {
+      const priorValue = forcedValues.get(index);
+      if (priorValue !== undefined && priorValue !== value) return steps;
+      forcedValues.set(index, value);
+    }
+    if (forcedValues.size === 0 || steps === maxSteps) return -1;
+
+    const [index, value] = forced.find(([forcedIndex]) => forcedIndex === forcedValues.keys().next().value);
+    workingGrid[index] = value;
+    steps += 1;
+  }
+  return -1;
+}
+
 export function validatePuzzle9({ solution, clues, liarIndex }) {
   if (!Array.isArray(solution) || solution.length !== SIZE_9 * SIZE_9 ||
       !Array.isArray(clues) || clues.length !== SIZE_9 * SIZE_9 ||
@@ -350,6 +423,9 @@ export function validatePuzzle9({ solution, clues, liarIndex }) {
   if (clueIndexes.length < 2 || clues[liarIndex] === 0) {
     return { valid: false, candidates: [], reason: "ウソのヒントが見つかりません。" };
   }
+  if (countSolutions9(clues, 1) !== 0) {
+    return { valid: false, candidates: [], reason: "ウソを含む盤面に解があるか、ヒントが重複しています。" };
+  }
   const wrongIndexes = clueIndexes.filter((index) => clues[index] !== solution[index]);
   if (wrongIndexes.length !== 1 || wrongIndexes[0] !== liarIndex) {
     return { valid: false, candidates: [], reason: "ウソのヒントは1つではありません。" };
@@ -363,16 +439,27 @@ export function validatePuzzle9({ solution, clues, liarIndex }) {
   }
 
   const candidates = [];
+  let otherCluesRemainUnsolvable = true;
   for (const index of clueIndexes) {
     const candidateGrid = [...clues];
     candidateGrid[index] = 0;
-    if (countSolutions9(candidateGrid, 2) === 1) candidates.push(index);
+    const solutionCount = countSolutions9(candidateGrid, 2);
+    if (index === liarIndex) {
+      if (solutionCount === 1) candidates.push(index);
+    } else if (solutionCount !== 0) {
+      otherCluesRemainUnsolvable = false;
+    }
   }
+  const contradictionDepth = findSinglesContradictionDepth9(clues, 2);
   return {
-    valid: candidates.length === 1 && candidates[0] === liarIndex,
+    valid: candidates.length === 1 && candidates[0] === liarIndex &&
+      otherCluesRemainUnsolvable && contradictionDepth >= 1 && contradictionDepth <= 2,
     candidates,
+    contradictionDepth,
     reason: candidates.length === 1 && candidates[0] === liarIndex
-      ? "ウソの位置が一意に決まります。"
+      ? otherCluesRemainUnsolvable && contradictionDepth >= 1 && contradictionDepth <= 2
+        ? "ウソの位置が一意に決まり、短いシングル推理で矛盾します。"
+        : "ウソ以外のヒントを除いた盤面または推理難易度が条件を満たしません。"
       : "ウソの位置を一意に特定できません。",
   };
 }
@@ -392,6 +479,55 @@ function hasUniqueSolution9(grid) {
   return countSolutions9(grid, 2) === 1;
 }
 
+function getPeerValues9(grid, index) {
+  const row = Math.floor(index / SIZE_9);
+  const column = index % SIZE_9;
+  const boxRow = Math.floor(row / BOX_SIZE_9) * BOX_SIZE_9;
+  const boxColumn = Math.floor(column / BOX_SIZE_9) * BOX_SIZE_9;
+  const values = new Set();
+  for (let offset = 0; offset < SIZE_9; offset += 1) {
+    const rowIndex = row * SIZE_9 + offset;
+    const columnIndex = offset * SIZE_9 + column;
+    if (rowIndex !== index && grid[rowIndex]) values.add(grid[rowIndex]);
+    if (columnIndex !== index && grid[columnIndex]) values.add(grid[columnIndex]);
+  }
+  for (let rowOffset = 0; rowOffset < BOX_SIZE_9; rowOffset += 1) {
+    for (let columnOffset = 0; columnOffset < BOX_SIZE_9; columnOffset += 1) {
+      const peerIndex = (boxRow + rowOffset) * SIZE_9 + boxColumn + columnOffset;
+      if (peerIndex !== index && grid[peerIndex]) values.add(grid[peerIndex]);
+    }
+  }
+  return values;
+}
+
+function findValidLiars9(solution, clues, clueIndexes, random) {
+  const validLiars = [];
+  for (const index of clueIndexes) {
+    const peerValues = getPeerValues9(clues, index);
+    for (let value = 1; value <= SIZE_9; value += 1) {
+      if (value === solution[index] || peerValues.has(value)) continue;
+      const candidateClues = [...clues];
+      candidateClues[index] = value;
+      const contradictionDepth = findSinglesContradictionDepth9(candidateClues, 2);
+      if (contradictionDepth < 1 || contradictionDepth > 2) continue;
+      if (countSolutions9(candidateClues, 1) !== 0) continue;
+
+      let allOtherCluesKeepItUnsolvable = true;
+      for (const otherIndex of clueIndexes) {
+        if (otherIndex === index) continue;
+        const reducedClues = [...candidateClues];
+        reducedClues[otherIndex] = 0;
+        if (countSolutions9(reducedClues, 1) !== 0) {
+          allOtherCluesKeepItUnsolvable = false;
+          break;
+        }
+      }
+      if (allOtherCluesKeepItUnsolvable) validLiars.push({ index, value });
+    }
+  }
+  return validLiars.length ? validLiars[Math.floor(random() * validLiars.length)] : null;
+}
+
 export function generatePuzzle9({ maxAttempts = 100, random = Math.random } = {}) {
   for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     const solution = createSolution9(random);
@@ -402,39 +538,9 @@ export function generatePuzzle9({ maxAttempts = 100, random = Math.random } = {}
     for (const index of clueIndexes) clues[index] = solution[index];
     if (!hasUniqueSolution9(clues)) continue;
 
-    const liarOptions = [];
-    for (const index of clueIndexes) {
-      const row = Math.floor(index / SIZE_9);
-      const column = index % SIZE_9;
-      const boxRow = Math.floor(row / BOX_SIZE_9) * BOX_SIZE_9;
-      const boxColumn = Math.floor(column / BOX_SIZE_9) * BOX_SIZE_9;
-      const peerIndexes = new Set();
-      for (let offset = 0; offset < SIZE_9; offset += 1) {
-        const rowIndex = row * SIZE_9 + offset;
-        const columnIndex = offset * SIZE_9 + column;
-        if (rowIndex !== index && clues[rowIndex]) peerIndexes.add(rowIndex);
-        if (columnIndex !== index && clues[columnIndex]) peerIndexes.add(columnIndex);
-      }
-      for (let rowOffset = 0; rowOffset < BOX_SIZE_9; rowOffset += 1) {
-        for (let columnOffset = 0; columnOffset < BOX_SIZE_9; columnOffset += 1) {
-          const peerIndex = (boxRow + rowOffset) * SIZE_9 + boxColumn + columnOffset;
-          if (peerIndex !== index && clues[peerIndex]) peerIndexes.add(peerIndex);
-        }
-      }
-
-      const valueCounts = new Map();
-      for (const peerIndex of peerIndexes) {
-        const value = clues[peerIndex];
-        valueCounts.set(value, (valueCounts.get(value) ?? 0) + 1);
-      }
-      for (const [value, count] of valueCounts) {
-        // 同じ数字のヒントを2つ以上ぶつけ、別の1マスを消しても矛盾が残るようにする。
-        if (count >= 2 && value !== solution[index]) liarOptions.push({ index, value });
-      }
-    }
-    if (liarOptions.length === 0) continue;
-
-    const { index: liarIndex, value } = liarOptions[Math.floor(random() * liarOptions.length)];
+    const liar = findValidLiars9(solution, clues, clueIndexes, random);
+    if (!liar) continue;
+    const { index: liarIndex, value } = liar;
     clues[liarIndex] = value;
     const puzzle = { solution, clues, liarIndex, attempts: attempt + 1 };
     if (validatePuzzle9(puzzle).valid) return puzzle;

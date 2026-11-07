@@ -1,5 +1,33 @@
 const EVENT_NAMES = new Set(["game_start", "game_complete", "game_share"]);
 const GAME_MODES = new Set(["4x4", "9x9"]);
+const MEASUREMENT_ID = "G-3E2VY70LKJ";
+
+export function isLocalHostname(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" ||
+    hostname === "::1" || hostname === "[::1]";
+}
+
+export function initializeGoogleAnalytics(hostname, browserWindow, browserDocument) {
+  if (isLocalHostname(hostname)) return false;
+
+  try {
+    browserWindow.dataLayer = browserWindow.dataLayer || [];
+    browserWindow.gtag = function gtag() {
+      browserWindow.dataLayer.push(arguments);
+    };
+    browserWindow.gtag("js", new Date());
+    browserWindow.gtag("config", MEASUREMENT_ID);
+
+    const script = browserDocument.createElement("script");
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${MEASUREMENT_ID}`;
+    browserDocument.head.append(script);
+    return true;
+  } catch (error) {
+    console.error("Google Analytics could not be initialized.", error);
+    return false;
+  }
+}
 
 export function createGameEventTracker(getGtag, onError = console.error) {
   const sentOnce = {
