@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#f8f8f5">
     <meta name="description" content="4×4のミニ数独で、たったひとつのウソの数字を見破ろう。">
     <title>ウソツキ数独 | SquidWorks Games</title>
-    <link rel="stylesheet" href="style.css?v=3">
-    <script type="module" src="script.js?v=7"></script>
+    <link rel="stylesheet" href="style.css?v=4">
+    <script type="module" src="script.js?v=8"></script>
   </head>
   <body>
     <header class="site-header">
@@ -44,6 +44,23 @@
           <div class="board-wrap">
             <div class="board board--4" id="board" role="group" aria-label="4行4列の数独盤面"></div>
           </div>
+
+          <section class="memo-controls" id="memo-controls" aria-label="メモ入力" hidden>
+            <p class="section-label">MEMO</p>
+            <p class="memo-status" id="memo-status" role="status" aria-live="polite"></p>
+            <div class="memo-buttons" role="group" aria-label="メモの数字">
+              <button type="button" data-memo-value="1">1</button>
+              <button type="button" data-memo-value="2">2</button>
+              <button type="button" data-memo-value="3">3</button>
+              <button type="button" data-memo-value="4">4</button>
+              <button type="button" data-memo-value="5">5</button>
+              <button type="button" data-memo-value="6">6</button>
+              <button type="button" data-memo-value="7">7</button>
+              <button type="button" data-memo-value="8">8</button>
+              <button type="button" data-memo-value="9">9</button>
+              <button type="button" class="memo-delete" data-memo-delete>削除</button>
+            </div>
+          </section>
 
           <div class="answer-row">
             <p class="answer-hint" id="answer-hint">ウソだと思う数字を選んでください。</p>
